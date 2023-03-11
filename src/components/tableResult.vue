@@ -5,7 +5,7 @@
         <th>Nickname</th>
         <th>Result</th>
       </tr>
-      <tr v-for="user in $store.state.users" v-bind:key="user.name">
+      <tr v-for="user in users" v-bind:key="user._id">
         <td>{{ user.name }}</td>
         <td>{{ user.count }}</td>
       </tr>
@@ -19,9 +19,24 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "tableResult",
-  data: () => ({}),
+  data: () => ({
+    users: null,
+  }),
+  mounted() {
+    axios
+      .get("/usersList")
+      .then((response) => {
+        this.users = response.data;
+      })
+      .catch((e) => {
+        console.log("Error:", e.message);
+      });
+  },
+
   methods: {
     reloadPage() {
       return location.reload();

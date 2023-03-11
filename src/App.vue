@@ -24,10 +24,12 @@
 import isWinner from "@/components/calculate/calculate-winner-crossorcircle";
 import FormUserInput from "@/components/formUserInput.vue";
 import WinnerPopup from "@/components/winnerPopup.vue";
+import axios from "axios";
 
 export default {
   components: { WinnerPopup, FormUserInput },
   data: () => ({
+    users: null,
     cells: [null, null, null, null, null, null, null, null, null],
     cross: "x",
     circle: "o",
@@ -47,7 +49,54 @@ export default {
       [2, 4, 6],
     ],
   }),
+
   methods: {
+    addItem(winner, loser) {
+      axios
+        .get("/usersList")
+        .then((response) => {
+          let winnerArray = [];
+          for (let data in response.data) {
+            if (response.data[data].name == winner.name) {
+              winnerArray.push(response.data[data]);
+            }
+          }
+          if (winnerArray[0] !== undefined) {
+            const update = {
+              name: winnerArray[0].name,
+              count: winnerArray[0].count + 1,
+            };
+            axios.patch(`/usersRework/${winnerArray[0]._id}`, update);
+          } else {
+            axios.post(`/users`, {
+              name: winner.name,
+              count: 1,
+            });
+          }
+
+          let loserArray = [];
+          for (let data in response.data) {
+            if (response.data[data].name == loser.name) {
+              loserArray.push(response.data[data]);
+            }
+          }
+          if (loserArray[0] !== undefined) {
+            const update = {
+              name: loserArray[0].name,
+              count: loserArray[0].count,
+            };
+            axios.patch(`/usersRework/${loserArray[0]._id}`, update);
+          } else {
+            axios.post(`/users`, {
+              name: winner.name,
+              count: 0,
+            });
+          }
+        })
+        .catch((e) => {
+          console.log("Error:", e.message);
+        });
+    },
     clickOnItem(index) {
       if (this.cells[index] !== null) {
         return;
@@ -63,7 +112,7 @@ export default {
             this.whoWins = this.$store.state.player2.name;
             this.$store.state.player2.count++;
             this.$store.state.users.push(this.$store.state.player1);
-            this.$store.state.users.push(this.$store.state.player2);
+            this.addItem(this.$store.state.player2, this.$store.state.player1);
           }
         }
       } else {
@@ -77,6 +126,7 @@ export default {
             this.$store.state.player1.count++;
             this.$store.state.users.push(this.$store.state.player1);
             this.$store.state.users.push(this.$store.state.player2);
+            this.addItem(this.$store.state.player1, this.$store.state.player2);
           }
         }
       }
@@ -93,8 +143,6 @@ export default {
               location.reload();
             }
           });
-        this.$store.state.users.push(this.$store.state.player1);
-        this.$store.state.users.push(this.$store.state.player2);
       }
     },
 

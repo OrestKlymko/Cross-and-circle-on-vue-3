@@ -3,6 +3,7 @@ import App from "./App.vue";
 import VueSweetalert2 from "vue-sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { createStore } from "vuex";
+import axios from "axios";
 
 const store = createStore({
   state() {
@@ -28,4 +29,5 @@ const store = createStore({
 const app = createApp(App);
 app.use(store);
 app.use(VueSweetalert2);
+app.config.globalProperties.$http = axios;
 app.mount("#app");
